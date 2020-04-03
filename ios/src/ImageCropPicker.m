@@ -191,6 +191,11 @@ RCT_EXPORT_METHOD(openCamera:(NSDictionary *)options
         }
 
         dispatch_async(dispatch_get_main_queue(), ^{
+            // GM start
+            if ([self isNeedToSetOrientation]) {
+                [ImageCropPicker setNeedKeepUIInterfaceOrientationMaskPortrait:YES];
+            }
+            // GM end
             [[self getRootVC] presentViewController:picker animated:YES completion:nil];
         });
     }];
@@ -200,6 +205,22 @@ RCT_EXPORT_METHOD(openCamera:(NSDictionary *)options
 - (void)viewDidLoad {
     [self viewDidLoad];
 }
+
+// GM start
+#pragma mark - 横竖屏控制相关
+static bool _needKeepUIInterfaceOrientationMaskPortrait = NO; // 判断当前是否需要保持竖屏
+- (BOOL) isNeedToSetOrientation {
+    return [[[UIDevice currentDevice] systemVersion] doubleValue] < 10.0;
+}
++ (void)setNeedKeepUIInterfaceOrientationMaskPortrait: (bool) needKeepUIInterfaceOrientationMaskPortrait {
+    _needKeepUIInterfaceOrientationMaskPortrait = needKeepUIInterfaceOrientationMaskPortrait;
+}
++ (bool)getNeedKeepUIInterfaceOrientationMaskPortrait {
+    return _needKeepUIInterfaceOrientationMaskPortrait;
+}
+// GM end
+
+#pragma mark - UIImagePickerControllerDelegate
 
 - (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary *)info {
     NSString* mediaType = [info objectForKey:UIImagePickerControllerMediaType];
@@ -238,6 +259,12 @@ RCT_EXPORT_METHOD(openCamera:(NSDictionary *)options
 }
 
 - (void)imagePickerControllerDidCancel:(UIImagePickerController *)picker {
+    // GM start
+    if ([self isNeedToSetOrientation]) {
+       [ImageCropPicker setNeedKeepUIInterfaceOrientationMaskPortrait:NO];
+    }
+    // GM end
+    
     [picker dismissViewControllerAnimated:YES completion:[self waitAnimationEnd:^{
         self.reject(ERROR_PICKER_CANCEL_KEY, ERROR_PICKER_CANCEL_MSG, nil);
     }]];
@@ -749,6 +776,11 @@ RCT_EXPORT_METHOD(openCropper:(NSDictionary *)options
 - (void) processSingleImagePick:(UIImage*)image withExif:(NSDictionary*) exif withViewController:(UIViewController*)viewController withSourceURL:(NSString*)sourceURL withLocalIdentifier:(NSString*)localIdentifier withFilename:(NSString*)filename withCreationDate:(NSDate*)creationDate withModificationDate:(NSDate*)modificationDate {
 
     if (image == nil) {
+        // GM start
+        if ([self isNeedToSetOrientation]) {
+           [ImageCropPicker setNeedKeepUIInterfaceOrientationMaskPortrait:NO];
+        }
+        // GM end
         [viewController dismissViewControllerAnimated:YES completion:[self waitAnimationEnd:^{
             self.reject(ERROR_PICKER_NO_DATA_KEY, ERROR_PICKER_NO_DATA_MSG, nil);
         }]];
@@ -768,6 +800,11 @@ RCT_EXPORT_METHOD(openCropper:(NSDictionary *)options
 
         [self startCropping:[image fixOrientation]];
     } else {
+        // GM start
+        if ([self isNeedToSetOrientation]) {
+           [ImageCropPicker setNeedKeepUIInterfaceOrientationMaskPortrait:NO];
+        }
+        // GM end
         ImageResult *imageResult = [self.compression compressImage:[image fixOrientation]  withOptions:self.options];
         NSString *filePath = [self persistFile:imageResult.data];
         if (filePath == nil) {

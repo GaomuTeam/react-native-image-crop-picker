@@ -55,6 +55,12 @@ typedef enum selectionMode {
 @property (nonatomic, strong) RCTPromiseRejectBlock reject;
 @property SelectionMode currentSelectionMode;
 
+// GM start
+// 类方法 - 判断当前是否需要保持竖屏
++ (void)setNeedKeepUIInterfaceOrientationMaskPortrait: (bool) needKeepUIInterfaceOrientationMaskPortrait;
++ (bool)getNeedKeepUIInterfaceOrientationMaskPortrait;
+// GM end
+
 @end
 
 #endif
